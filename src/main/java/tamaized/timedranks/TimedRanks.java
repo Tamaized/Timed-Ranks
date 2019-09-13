@@ -19,7 +19,7 @@ import java.util.Comparator;
 import java.util.List;
 
 @Mod.EventBusSubscriber
-@Mod(modid = TimedRanks.MODID, dependencies = "required-after:" + FTBUtilities.MOD_ID + "@[" + FTBUtilities.VERSION + ",)")
+@Mod(modid = TimedRanks.MODID, acceptableRemoteVersions = "*", dependencies = "required-after:" + FTBUtilities.MOD_ID + "@[" + FTBUtilities.VERSION + ",)")
 public class TimedRanks {
 
 	public static final String MODID = "timedranks";
