@@ -27,7 +27,7 @@ public class TimedRanks {
 	public static final String ID_TIMER = MODID + ".timer";
 	public static final String ID_OVERRIDE = MODID + ".override";
 
-	final static List<IntPair<Rank>> ranks = new ArrayList<>();
+	final static List<LongPair<Rank>> ranks = new ArrayList<>();
 
 	@SubscribeEvent
 	public static void tick(TickEvent.PlayerTickEvent e) {
@@ -42,7 +42,7 @@ public class TimedRanks {
 
 				(!timer.isJsonNull() && (override.isJsonNull() || override.getAsBoolean()))) {
 			long ticks = ((EntityPlayerMP) e.player).getStatFile().readStat(StatList.PLAY_ONE_MINUTE);
-			for (IntPair<Rank> next : ranks)
+			for (LongPair<Rank> next : ranks)
 				if (next.value <= ticks) {
 					if (!rank.equals(next.entry)) {
 						Ranks.INSTANCE.setRank(e.player.getUniqueID(), next.entry);
@@ -61,16 +61,16 @@ public class TimedRanks {
 			JsonElement element = rank.getConfigRaw(Node.get(ID_TIMER));
 			int val = element.isJsonNull() ? -1 : element.getAsInt();
 			if (val > 0)
-				ranks.add(new IntPair<>(rank, val));
+				ranks.add(new LongPair<>(rank, val));
 		});
-		ranks.sort(Comparator.<IntPair<Rank>>comparingLong(p -> p.value).reversed());
+		ranks.sort(Comparator.<LongPair<Rank>>comparingLong(p -> p.value).reversed());
 	}
 
-	private static class IntPair<T> {
+	private static class LongPair<T> {
 		final T entry;
 		final long value;
 
-		public IntPair(T entry, long value) {
+		public LongPair(T entry, long value) {
 			this.entry = entry;
 			this.value = value;
 		}
