@@ -1,0 +1,113 @@
+// define the properties file
+ext.configFile = file "gradle.properties"
+configFile.withReader {
+    // read config.  it shall from now on be referenced as simply config or as project.config
+    def prop = new Properties()
+    prop.load(it)
+    project.ext.config = new ConfigSlurper().parse prop
+}
+
+// For those who want the bleeding edge
+buildscript {
+    repositories {
+        jcenter()
+        maven {
+            name = "forge"
+            url = "http://files.minecraftforge.net/maven"
+        }
+    }
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+    }
+}
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'maven'
+
+///////////////////////////////////////////////////
+// IDE Settings
+///////////////////////////////////////////////////
+idea {
+    project {
+        languageLevel = '1.8'
+    }
+}
+
+///////////////////////////////////////////////////
+// ForgeGradle
+///////////////////////////////////////////////////
+version = config.mod_version
+group = config.group_name
+archivesBaseName = "${config.mod_id}-${config.minecraft_version}"
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+minecraft {
+    version = config.minecraft_version + "-" + config.forge_version // grab latest forge
+    runDir = "run"
+
+    mappings = config.mcp_mappings
+    makeObfSourceJar = false
+
+    replace '@mod_version@', version
+    replace '@mod_id@', config.mod_id
+
+    replaceIn 'TimedRanks.java'
+    replace '@VERSION@', project.version
+}
+
+processResources {
+
+    // this will ensure that this task is redone when the versions change.
+    inputs.property "version", project.version
+    inputs.property "mcversion", project.minecraft.version
+
+    // replace stuff in mcmod.info, nothing else
+    from(sourceSets.main.resources.srcDirs) {
+        include '**/*.info'
+
+        // replace version and mcversion
+        expand ([
+                'version':project.version,
+                'mcversion':project.minecraft.version,
+                'forge_version': config.forge_version,
+                'mod_version': config.mod_version,
+                'minecraft_version': config.minecraft_version
+        ])
+    }
+
+    // copy everything else, thats not the mcmod.info
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'mcmod.info'
+    }
+}
+
+compileJava {
+    options.encoding = 'UTF-8'
+}
+
+jar {
+    classifier = 'universal'
+    /*manifest {
+        attributes 'FMLAT': 'tr_at.cfg'
+    }*/
+}
+
+repositories {
+    maven {
+        name 'progwm\'s Maven' // JEI
+        url 'https://dvs1.progwml6.com/files/maven'
+    }
+    maven {
+        name 'Lat\'s Maven' // FTBUtils
+        url 'https://maven.latmod.com'
+    }
+}
+
+dependencies {
+    deobfCompile "mezz.jei:jei_${minecraft_version}:${jei_version}"
+
+    deobfCompile "com.feed_the_beast.mods:FTBLib:${ftblib_version}"
+    deobfCompile "com.feed_the_beast.mods:FTBUtilities:${ftbu_version}"
+}

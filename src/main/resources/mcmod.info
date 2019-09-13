@@ -1,0 +1,16 @@
+[
+{
+  "modid": "timedranks",
+  "name": "Timed Ranks",
+  "description": "FTBUtil ranks earned based on time played",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "updateUrl": "",
+  "authorList": [
+    "Tamaized"
+  ],
+  "credits": "Tamaized",
+  "screenshots": [],
+  "dependencies": []
+}
+]
