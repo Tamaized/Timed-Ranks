@@ -37,7 +37,7 @@ idea {
 ///////////////////////////////////////////////////
 // ForgeGradle
 ///////////////////////////////////////////////////
-version = config.mod_version
+version = "${config.mod_version}.${config.mod_version_patch}"
 group = config.group_name
 archivesBaseName = "${config.mod_id}-${config.minecraft_version}"
 sourceCompatibility = JavaVersion.VERSION_1_8
@@ -68,11 +68,11 @@ processResources {
         include '**/*.info'
 
         // replace version and mcversion
-        expand ([
-                'version':project.version,
-                'mcversion':project.minecraft.version,
-                'forge_version': config.forge_version,
-                'mod_version': config.mod_version,
+        expand([
+                'version'          : project.version,
+                'mcversion'        : project.minecraft.version,
+                'forge_version'    : config.forge_version,
+                'mod_version'      : config.mod_version,
                 'minecraft_version': config.minecraft_version
         ])
     }
@@ -111,3 +111,11 @@ dependencies {
     deobfCompile "com.feed_the_beast.mods:FTBLib:${ftblib_version}"
     deobfCompile "com.feed_the_beast.mods:FTBUtilities:${ftbu_version}"
 }
+
+task finalize << {
+    ant.propertyfile(file: "gradle.properties") {
+        entry(key: "mod_version_patch", value: Integer.parseInt(config.mod_version_patch) + 1)
+    }
+}
+
+build.finalizedBy(finalize)
