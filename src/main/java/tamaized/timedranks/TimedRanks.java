@@ -1,6 +1,9 @@
 package tamaized.timedranks;
 
+import com.feed_the_beast.ftblib.events.RegisterRankConfigEvent;
 import com.feed_the_beast.ftblib.events.ServerReloadEvent;
+import com.feed_the_beast.ftblib.lib.config.ConfigBoolean;
+import com.feed_the_beast.ftblib.lib.config.ConfigLong;
 import com.feed_the_beast.ftblib.lib.util.ServerUtils;
 import com.feed_the_beast.ftblib.lib.util.StringUtils;
 import com.feed_the_beast.ftblib.lib.util.misc.Node;
@@ -20,9 +23,11 @@ import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.network.handshake.NetworkDispatcher;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Mod.EventBusSubscriber
@@ -36,6 +41,9 @@ public class TimedRanks {
 
 	final static List<LongPair<Rank>> ranks = new ArrayList<>();
 	final static List<UUID> HASMOD = new ArrayList<>();
+
+	private static Map field_Ranks_permissionCache;
+	private static Map field_Ranks_configCache;
 
 	@SubscribeEvent
 	public static void tick(TickEvent.PlayerTickEvent e) {
@@ -60,6 +68,28 @@ public class TimedRanks {
 			for (LongPair<Rank> next : ranks)
 				if (next.value <= ticks) {
 					if (!rank.equals(next.entry)) {
+						try {
+							if (field_Ranks_permissionCache == null) {
+								Field permissionCache = Ranks.class.getDeclaredField("permissionCache");
+								permissionCache.setAccessible(true);
+								Object o = permissionCache.get(Ranks.INSTANCE);
+								if (o instanceof Map)
+									field_Ranks_permissionCache = (Map) o;
+							}
+							if (field_Ranks_configCache == null) {
+								Field configCache = Ranks.class.getDeclaredField("configCache");
+								configCache.setAccessible(true);
+								Object o = configCache.get(Ranks.INSTANCE);
+								if (o instanceof Map)
+									field_Ranks_configCache = (Map) o;
+							}
+						} catch (NoSuchFieldException | IllegalAccessException ex) {
+							ex.printStackTrace();
+						}
+						if (field_Ranks_permissionCache != null)
+							field_Ranks_permissionCache.clear();
+						if (field_Ranks_configCache != null)
+							field_Ranks_configCache.clear();
 						Ranks.INSTANCE.getPlayerRank(e.player).addParent(next.entry);
 						if (e.player.getServer() != null) {
 							ITextComponent component = new TextComponentTranslation(MODID + ".message.upgrade", e.player.getDisplayName(), next.entry.getDisplayName());
@@ -104,6 +134,12 @@ public class TimedRanks {
 				ranks.add(new LongPair<>(rank, val));
 		});
 		ranks.sort(Comparator.<LongPair<Rank>>comparingLong(p -> p.value).reversed());
+	}
+
+	@SubscribeEvent
+	public static void registerConfigs(RegisterRankConfigEvent event) {
+		event.register(Node.get(ID_TIMER), new ConfigLong(0L));
+		event.register(Node.get(ID_OVERRIDE), new ConfigBoolean(true));
 	}
 
 	private static class LongPair<T> {
